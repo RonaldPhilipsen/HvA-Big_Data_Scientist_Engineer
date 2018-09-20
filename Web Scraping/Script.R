@@ -4,6 +4,7 @@ library(stringr)
 library(doParallel)
 library(foreach)
 library(dplyr)
+library(ggplot2)
 
 parseMovies <- function(movies) {
     options(stringsAsFactors = FALSE)
@@ -87,3 +88,4 @@ movies <- foreach(i = 1:201, .combine = combineListToDF, .packages = c("rvest", 
 }
 
 summary(movies)
+qplot(movies$meta_score, movies$imdb_score, geom = c("point", "smooth"))

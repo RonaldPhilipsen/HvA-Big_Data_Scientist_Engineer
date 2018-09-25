@@ -13,6 +13,8 @@ Project("{DA7A21FA-8162-4350-AD77-A8D1B671F3ED}") = "Theoph", "Theoph\Theoph.rxp
 EndProject
 Project("{DA7A21FA-8162-4350-AD77-A8D1B671F3ED}") = "Web Scraping", "Web Scraping\Web Scraping.rxproj", "{A0845959-58B9-4F82-9B32-1F829FD1C1EB}"
 EndProject
+Project("{DA7A21FA-8162-4350-AD77-A8D1B671F3ED}") = "DEDS Bonus Test 1819v1", "DEDS Bonus Test 1819v1\DEDS Bonus Test 1819v1.rxproj", "{21BD50E1-5DF8-4431-B3C2-B04223E0B44E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -37,6 +39,10 @@ Global
 		{A0845959-58B9-4F82-9B32-1F829FD1C1EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A0845959-58B9-4F82-9B32-1F829FD1C1EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A0845959-58B9-4F82-9B32-1F829FD1C1EB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{21BD50E1-5DF8-4431-B3C2-B04223E0B44E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{21BD50E1-5DF8-4431-B3C2-B04223E0B44E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{21BD50E1-5DF8-4431-B3C2-B04223E0B44E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{21BD50E1-5DF8-4431-B3C2-B04223E0B44E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

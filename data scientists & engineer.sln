@@ -3,17 +3,17 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28016.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "Heartstone", "Heartstone\Heartstone.pyproj", "{832365B7-FF8D-4130-9837-4D2B5B0C1333}"
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "1. Heartstone", "Heartstone\1. Heartstone.pyproj", "{832365B7-FF8D-4130-9837-4D2B5B0C1333}"
 EndProject
-Project("{DA7A21FA-8162-4350-AD77-A8D1B671F3ED}") = "basic operations", "basic operations\basic operations.rxproj", "{0F430611-E814-4886-BC80-5CA194FF362F}"
+Project("{DA7A21FA-8162-4350-AD77-A8D1B671F3ED}") = "2. basic operations", "basic operations\2. basic operations.rxproj", "{0F430611-E814-4886-BC80-5CA194FF362F}"
 EndProject
-Project("{DA7A21FA-8162-4350-AD77-A8D1B671F3ED}") = "MpgData", "MpgData\MpgData.rxproj", "{5B526F8A-5126-47E8-8FAD-B7222C42470A}"
+Project("{DA7A21FA-8162-4350-AD77-A8D1B671F3ED}") = "3. MpgData", "MpgData\3. MpgData.rxproj", "{5B526F8A-5126-47E8-8FAD-B7222C42470A}"
 EndProject
-Project("{DA7A21FA-8162-4350-AD77-A8D1B671F3ED}") = "Theoph", "Theoph\Theoph.rxproj", "{92C0894C-0D71-4267-8D56-D16BE16FF98B}"
+Project("{DA7A21FA-8162-4350-AD77-A8D1B671F3ED}") = "4. Theoph", "Theoph\4. Theoph.rxproj", "{92C0894C-0D71-4267-8D56-D16BE16FF98B}"
 EndProject
-Project("{DA7A21FA-8162-4350-AD77-A8D1B671F3ED}") = "Web Scraping", "Web Scraping\Web Scraping.rxproj", "{A0845959-58B9-4F82-9B32-1F829FD1C1EB}"
+Project("{DA7A21FA-8162-4350-AD77-A8D1B671F3ED}") = "5. Web Scraping", "Web Scraping\5. Web Scraping.rxproj", "{A0845959-58B9-4F82-9B32-1F829FD1C1EB}"
 EndProject
-Project("{DA7A21FA-8162-4350-AD77-A8D1B671F3ED}") = "DEDS Bonus Test 1819v1", "DEDS Bonus Test 1819v1\DEDS Bonus Test 1819v1.rxproj", "{21BD50E1-5DF8-4431-B3C2-B04223E0B44E}"
+Project("{DA7A21FA-8162-4350-AD77-A8D1B671F3ED}") = "6. Classifiers", "7. Classifiers\6. Classifiers.rxproj", "{3A90CC83-51EB-40F2-8575-86B07C0DD867}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,10 +39,10 @@ Global
 		{A0845959-58B9-4F82-9B32-1F829FD1C1EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A0845959-58B9-4F82-9B32-1F829FD1C1EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A0845959-58B9-4F82-9B32-1F829FD1C1EB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{21BD50E1-5DF8-4431-B3C2-B04223E0B44E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{21BD50E1-5DF8-4431-B3C2-B04223E0B44E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{21BD50E1-5DF8-4431-B3C2-B04223E0B44E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{21BD50E1-5DF8-4431-B3C2-B04223E0B44E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3A90CC83-51EB-40F2-8575-86B07C0DD867}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3A90CC83-51EB-40F2-8575-86B07C0DD867}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3A90CC83-51EB-40F2-8575-86B07C0DD867}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3A90CC83-51EB-40F2-8575-86B07C0DD867}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

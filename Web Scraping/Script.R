@@ -80,10 +80,8 @@ registerDoParallel(cl)
 movies <- data.frame(title = character(), release_year = integer(), imdb_score = integer(), meta_score = integer(), gross_profits = double())
 i <- 1
 
-movies <- foreach(i = 1:201, .combine = combineListToDF, .packages = c("rvest", "magrittr")) %do% {
-
+movies <- foreach(i = 1:201, .combine = combineListToDF, .packages = c("rvest", "magrittr")) %dopar% {
     imdbURL <- url(paste("https://www.imdb.com/search/title?year=2018,2018&title_type=feature&sort=moviemeter,asc&page=", i, "&ref_=adv_nxt", sep = ""))
-
     parseImbdPage(imdbURL)
 }
 

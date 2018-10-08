@@ -6,7 +6,6 @@ library(tm)
 library(mlr)
 library(parallelMap)
 
-parallelStartSocket(2)
 
 finn <- get_sentiments("afinn")
 bing <- get_sentiments("bing")
@@ -26,22 +25,36 @@ combined$ID <- seq.int(nrow(combined))
 
 pr <- as.data.frame(t(rbind(Review = combined$Positive_Review, Consensus = +1)))
 nr <- as.data.frame(t(rbind(Review = combined$Negative_Review, Consensus = -1)))
+all_reviews <- rbind(pr, nr)
+all_reviews <- all_reviews[sample.int(nrow(all_reviews)),]
 
-all_reviews <- rbind(pr, nr)[1:40,]
-all_reviews <- na.omit(all_reviews)
+
+all_reviews$Review <- all_reviews$Review %>%
+    gsub(pattern = "[a-zA-Z]*([0-9]{3,})[a-zA-Z0-9]* ?", replacement = "") %>%
+    gsub(pattern = "\\d+ ", replacement = "") %>%
+    gsub(pattern = "[[:punct:]]", replacement = "") %>%
+    gsub(pattern = "[\r\n]", replacement = "") %>%
+    gsub(pattern = stop_pattern, replacement = "") %>%
+    gsub(pattern = undesirable_pattern, replacement = "") %>%
+    gsub(pattern = " {2,}", replacement = " ") %>%
+    trimws()
+
 training_set <- all_reviews[1:20,]
+
+
+matrixReviews = RTextTools::create_matrix(all_reviews[1:1000, 1], language = "english",
+                      removeStopwords = FALSE, removeNumbers = TRUE,
+                      stemWords = FALSE)
+maReviews = as.matrix(matrixReviews)
+
+
+classifier = naiveBayes(maReviews[1:25,], as.factor(all_reviews[1:25, 2]))
+predicted = predict(classifier, maReviews[26:100,])
+table(all_reviews[26:10, 2], predicted)
+RTextTools::recall_accuracy(all_reviews[26:100, 2], predicted)
+
 
 #docs <- Corpus(VectorSource(combined$Positive_Review)) %>%
 #    tm_map(removePunctuation) %>%
 #    tm_map(removeNumbers) %>%
 #    tm_map(cleanData)
-
-task = makeClassifTask(data = training_set, target = "Consensus")
-selected_model = makeLearner("classif.naiveBayes")
-NB_mlr = train(selected_model, task)
-NB_mlr$learner.model
-
-predictions_mlr = as.data.frame(predict(NB_mlr, newdata = all_reviews))
-table(predictions_mlr[, 1], all_reviews$Consensus)
-
-parallelStop()

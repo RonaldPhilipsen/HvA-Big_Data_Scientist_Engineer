@@ -4,7 +4,9 @@ library(dplyr)
 library(dtplyr)
 library(tm)
 library(mlr)
+library(parallelMap)
 
+parallelStartSocket(2)
 
 finn <- get_sentiments("afinn")
 bing <- get_sentiments("bing")
@@ -22,7 +24,6 @@ df$Combined_Review <- paste(df$Positive_Review, df$Negative_Review)
 combined <- group_by(df, Hotel_Name)
 combined$ID <- seq.int(nrow(combined))
 
-
 pr <- as.data.frame(t(rbind(Review = combined$Positive_Review, Consensus = +1)))
 nr <- as.data.frame(t(rbind(Review = combined$Negative_Review, Consensus = -1)))
 
@@ -30,11 +31,10 @@ all_reviews <- rbind(pr, nr)[1:40,]
 all_reviews <- na.omit(all_reviews)
 training_set <- all_reviews[1:20,]
 
-source("GetTokens.R")
-docs <- Corpus(VectorSource(combined$Positive_Review)) %>%
-    tm_map(removePunctuation) %>%
-    tm_map(removeNumbers) %>%
-    tm_map(cleanData)
+#docs <- Corpus(VectorSource(combined$Positive_Review)) %>%
+#    tm_map(removePunctuation) %>%
+#    tm_map(removeNumbers) %>%
+#    tm_map(cleanData)
 
 task = makeClassifTask(data = training_set, target = "Consensus")
 selected_model = makeLearner("classif.naiveBayes")
@@ -43,3 +43,5 @@ NB_mlr$learner.model
 
 predictions_mlr = as.data.frame(predict(NB_mlr, newdata = all_reviews))
 table(predictions_mlr[, 1], all_reviews$Consensus)
+
+parallelStop()

@@ -3,7 +3,7 @@ required_packages <- c("magrittr", "tm", "mlr", "e1071", "dplyr", "kernlab", "lu
                        "SnowballC", "wordcloud", "reshape2")
 lapply(required_packages, require, character.only = TRUE)
 
-#display the amount of reviews per week
+# Source a bunch of helper files
 source("ReviewTools.R")
 source("GetTokens.R")
 source("Sentiment.R")
@@ -23,6 +23,8 @@ df <- df[complete.cases(df),][1:(nrow(df) / 100),]
 
 #get the dates as dates insteadof strings
 df$Review_Date <- as.Date(df$Review_Date, format = "%m/%d/%Y")
+
+#display the amount of reviews per week
 getReviewsPerWeek(df)
 
 # split and clean the data
@@ -58,8 +60,6 @@ bing_word_counts <- reviews %>%
 
 #get the contributions of single words for a given set of sentiments
 get_contributions(reviews, AFINN)
-
-
 
 #all_reviews$review_body <- cleanBody(all_reviews$review_body)
 #source("NaiveBayes.R")

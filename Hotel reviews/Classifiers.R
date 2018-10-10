@@ -17,7 +17,7 @@ DoNaiveBayes <- function(df) {
     matrixReviews <- NULL
 }
 
-DoNaiveBayes2 <- function(mat, reviews, testStart, testEnd) {
+DoNaiveBayes2 <- function(mat, reviews) {
     # train the model
     classifier = naiveBayes(mat[trainStart:trainEnd,], as.factor(reviews[1:trainEnd, 2]))
 
@@ -28,25 +28,15 @@ DoNaiveBayes2 <- function(mat, reviews, testStart, testEnd) {
     recall_accuracy(reviews[testStart:testEnd, 2], predicted)
 }
 
-DoMultipleClassifiers <- function(mat, reviews, testStart, testEnd) {
+DoMultipleClassifiers <- function(mat, reviews) {
     # build the data to specify response variable, training set, testing set.
     # using a RTextTools container
     container = create_container(mat, as.numeric(as.factor(reviews[, 2])),
                              trainSize = trainStart:trainEnd, testSize = testStart:testEnd, virgin = FALSE)
+    algos = c("MAXENT", "SVM", "BAGGING", "TREE")
 
-    models = train_models(container, algorithms = c("MAXENT", "SVM", "RF", "BAGGING", "TREE"))
+    models = train_models(container, algorithms = algos)
     results = classify_models(container, models)
-
-    # accuracy table
-    table(as.numeric(as.factor(reviews[testStart:testEnd, 2])), results[, "FORESTS_LABEL"])
-    table(as.numeric(as.factor(reviews[testStart:testEnd, 2])), results[, "MAXENTROPY_LABEL"])
-
-    # recall accuracy
-    recall_accuracy(as.numeric(as.factor(reviews[testStart:testEnd, 2])), results[, "FORESTS_LABEL"])
-    recall_accuracy(as.numeric(as.factor(reviews[testStart:testEnd, 2])), results[, "MAXENTROPY_LABEL"])
-    recall_accuracy(as.numeric(as.factor(reviews[testStart:testEnd, 2])), results[, "TREE_LABEL"])
-    recall_accuracy(as.numeric(as.factor(reviews[testStart:testEnd, 2])), results[, "BAGGING_LABEL"])
-    recall_accuracy(as.numeric(as.factor(reviews[testStart:testEnd, 2])), results[, "SVM_LABEL"])
 
     # model summary
     analytics = create_analytics(container, results)
@@ -57,10 +47,37 @@ DoMultipleClassifiers <- function(mat, reviews, testStart, testEnd) {
     return(container)
 }
 
-DoCrossValidation <- function(container, n) {
+DoCrossValidation <- function(container, N) {
     set.seed(2014)
+
+    cat("\n Cross validating Max entropy: \n")
     cross_validate(container, N, "MAXENT")
-    cross_validate(container, N, "TREE")
+    cat("\n Cross validating SVM: \n")
     cross_validate(container, N, "SVM")
-    cross_validate(container, N, "RF")
+    cat("\n Cross validating Tree: \n")
+    cross_validate(container, N, "TREE")
+    cat("\n Cross validating Bagging: \n")
+    cross_validate(container, N, "BAGGING")
 }
+
+# accuracy table
+#cat("Showing truth tables for algorithms: ", algos)
+#table(as.numeric(as.factor(reviews[testStart:testEnd, 2])), results[, "MAXENTROPY_LABEL"])
+#table(as.numeric(as.factor(reviews[testStart:testEnd, 2])), results[, "SVM_LABEL"])
+#table(as.numeric(as.factor(reviews[testStart:testEnd, 2])), results[, "BAGGING_LABEL"])
+#table(as.numeric(as.factor(reviews[testStart:testEnd, 2])), results[, "TREE_LABEL"])
+
+# recall accuracy
+#cat("Max entropy accuracy: ",
+#    recall_accuracy(as.numeric(as.factor(reviews[testStart:testEnd, 2])), results[, "MAXENTROPY_LABEL"])
+#    , "\n")
+#cat("SVM  accuracy: ",
+#    recall_accuracy(as.numeric(as.factor(reviews[testStart:testEnd, 2])), results[, "SVM_LABEL"])
+#    , "\n")
+#
+#cat("Bagging accuracy: ",
+#    recall_accuracy(as.numeric(as.factor(reviews[testStart:testEnd, 2])), results[, "BAGGING_LABEL"])
+#    , "\n")
+#cat("Tree accuracy: ",
+#    recall_accuracy(as.numeric(as.factor(reviews[testStart:testEnd, 2])), results[, "TREE_LABEL"])
+#    , "\n\n\n")

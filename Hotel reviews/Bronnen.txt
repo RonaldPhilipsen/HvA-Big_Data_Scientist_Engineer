@@ -1,3 +1,4 @@
 ﻿https://github.com/susanli2016/Data-Analysis-with-R/blob/master/Text%20Mining%20Hilton%20Hawaiian%20Village%20TripAdvisor%20Reviews.Rmd
 https://towardsdatascience.com/scraping-tripadvisor-text-mining-and-sentiment-analysis-for-hotel-reviews-cc4e20aef333
 https://www.researchgate.net/publication/275955836_Sentiment_Analysis_for_Hotel_Reviews
+https://datascienceplus.com/sentiment-analysis-with-machine-learning-in-r/

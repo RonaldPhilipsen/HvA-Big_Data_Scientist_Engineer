@@ -1,7 +1,7 @@
 #pulls up the grapth to show how much impact the top 25 contibuters 
 #have for a given sentiments set.
-get_contributions <- function(tidy_reviews, sentiments) {
-    tidy_reviews %>%
+getContribution <- function(tidyReviews, sentiments) {
+    tidyReviews %>%
     inner_join(sentiments, by = "word") %>%
     group_by(word) %>%
     summarize(occurences = n(), contribution = sum(score)) %>%

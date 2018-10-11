@@ -1,30 +1,29 @@
 required_packages <- c("magrittr", "tm", "mlr", "e1071", "dplyr", "kernlab", "lubridate", "dtplyr",
-                       "readr", "ggplot2", "tidytext", "stringr", "tidyr", "scales", "broom", 
-                       "SnowballC", "wordcloud", "reshape2", "RTextTools")
-lapply(required_packages, require, character.only = TRUE)
+                       "readr", "ggplot2", "tidytext", "stringr", "tidyr", "scales", "broom",
+                       "SnowballC", "wordcloud", "reshape2", "RTextTools", "hunspell")
+x <- lapply(required_packages, library, character.only = TRUE)
 
-# Source a bunch of helper files
-source("ReviewTools.R")
-source("Sentiment.R")
-source("Classifiers.R")
+extra_scripts <- c("ReviewTools.R", "Sentiment.R", "Classifiers.R")
+x <- lapply(extra_scripts, source)
 
 if (!file.exists("Cleaned.csv")) {
     source("CleanData.R")
 }
 
-
 df <- read.csv("Cleaned.csv", stringsAsFactors = FALSE)
 colnames(df) <- gsub("X", "ID", colnames(df))
 
+getContribution(df$review_body, get_sentiments("afinn"))
 
 # randomise 
 df <- df[sample(nrow(df)),]
+df <- df[sample(nrow(df)),]
+
 
 trainStart <- 1
 trainEnd <- 1000
 testStart <- 1001
 testEnd <- 2000
-
 
 reviews <- df[trainStart:testEnd, 2:3]
 
@@ -37,39 +36,23 @@ matrix = create_matrix(reviews[, 1], language = "english",
 
 mat = as.matrix(matrix)
 
+model <- DoMultipleClassifiers(mat, reviews, FALSE)
 
-DoNaiveBayes2(mat, reviews)
-completedContainer <- DoMultipleClassifiers(mat, reviews)
-DoCrossValidation(completedContainer, 4)
+head(model)
 
-#DoNaiveBayes(df[1:nrow(df) / 100,])
+test <- data.frame(review_body = "this hotel is a piece of shit i will never go there again you cocksuckers", consensus = NA)
+
+newmatrix <- create_matrix(test, language = "english",
+                      removeStopwords = TRUE,
+                      removeNumbers = TRUE,
+                      stemWords = FALSE,
+                      tm::weightTfIdf)
+
+container <- create_container(newmatrix,
+                                as.numeric(as.factor(test[, 2])),
+                                trainSize = 1:1,
+                                testSize = 1:1,
+                                virgin = FALSE)
 
 
-#reviews <- df %>%
-#    distinct(review_body, .keep_all = TRUE) %>%
-#    unnest_tokens(word, "review_body", drop = FALSE) %>%
-#    distinct(ID, word, .keep_all = TRUE) %>%
-#    filter(str_detect(word, "[^\\d]")) %>%
-#    #remove all single characters
-#    group_by(word)
-#
-#reviews$review_body <- NULL
-#
-#review_words <- reviews %>%
-#    mutate(word_total = n()) %>%
-#    ungroup()
-#
-#
-#getWordCount(review_words)
-#
-##get the word counts per word
-#BingWordCounts <- reviews %>%
-#    inner_join(get_sentiments("bing")) %>%
-#    count(word, sentiment, sort = TRUE) %>%
-#    ungroup()
-#
-##get the contributions of single words for a given set of sentiments
-#AFINN <- get_sentiments("afinn")
-#getContribution(reviews, AFINN)
-
-# build the data to specify response variable, training set, testing set.
+prediction <- classify_model(container, model$TREE)

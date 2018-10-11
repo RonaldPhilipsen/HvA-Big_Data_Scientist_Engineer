@@ -1,7 +1,8 @@
 #cleanData <- function() {
 
 CleanBody <- function(words) {
-    words %>%
+    as.vector(words) %>%
+    stemDocument() %>%
     tolower() %>%
     #remove decimals longer than 3, they confuse the matrix
     gsub(pattern = "[a-zA-Z]*([0-9]{3,})[a-zA-Z0-9]* ?", replacement = "") %>%
@@ -18,6 +19,7 @@ CleanBody <- function(words) {
     #remove whitespace longer than one
     gsub(pattern = " {2,}", replacement = " ") %>%
     #trim whitespace at the front and the end
+    as.factor %>%
     trimws() %>%
     return()
 }

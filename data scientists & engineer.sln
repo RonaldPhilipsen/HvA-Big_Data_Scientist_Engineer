@@ -15,8 +15,6 @@ Project("{DA7A21FA-8162-4350-AD77-A8D1B671F3ED}") = "5. Web Scraping", "Web Scra
 EndProject
 Project("{DA7A21FA-8162-4350-AD77-A8D1B671F3ED}") = "6. Classifiers", "7. Classifiers\6. Classifiers.rxproj", "{3A90CC83-51EB-40F2-8575-86B07C0DD867}"
 EndProject
-Project("{DA7A21FA-8162-4350-AD77-A8D1B671F3ED}") = "7. twitter meuk", "8. Cosine similarity\7. twitter meuk.rxproj", "{C6467650-EBD4-4AA7-9C42-98C4784A0043}"
-EndProject
 Project("{DA7A21FA-8162-4350-AD77-A8D1B671F3ED}") = "Hotel reviews", "Hotel reviews\Hotel reviews.rxproj", "{03737239-8285-4762-AE84-1F7952A11936}"
 EndProject
 Global
@@ -47,10 +45,6 @@ Global
 		{3A90CC83-51EB-40F2-8575-86B07C0DD867}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3A90CC83-51EB-40F2-8575-86B07C0DD867}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3A90CC83-51EB-40F2-8575-86B07C0DD867}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C6467650-EBD4-4AA7-9C42-98C4784A0043}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C6467650-EBD4-4AA7-9C42-98C4784A0043}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C6467650-EBD4-4AA7-9C42-98C4784A0043}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C6467650-EBD4-4AA7-9C42-98C4784A0043}.Release|Any CPU.Build.0 = Release|Any CPU
 		{03737239-8285-4762-AE84-1F7952A11936}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{03737239-8285-4762-AE84-1F7952A11936}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{03737239-8285-4762-AE84-1F7952A11936}.Release|Any CPU.ActiveCfg = Release|Any CPU

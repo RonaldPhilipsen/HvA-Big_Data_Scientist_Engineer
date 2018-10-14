@@ -1,7 +1,16 @@
 #cleanData <- function() {
+UndesirableWords <- c("positive", "negative",
+                           "and", "it", "in", "hotel",
+                           "staff", "location", "breakfast",
+                           "bathroom", "room", "bed", "na", "nana")
+
+unwantedWords <- as.vector(c(stopwords("en"), UndesirableWords))
+UnwantedPattern <- paste0("\\b(", paste0(unwantedWords, collapse = "|"), ")\\b")
+
 
 CleanBody <- function(words) {
     as.vector(words) %>%
+    iconv(to = "ASCII") %>%
     stemDocument() %>%
     tolower() %>%
     #remove decimals longer than 3, they confuse the matrix
@@ -26,35 +35,25 @@ CleanBody <- function(words) {
 
 
 # Define undesirable patterns, such as UnwantedPattern
+CleanCSV <- function(filename) {
+       
+    # Read in the hotel reviews
+    df <- read.csv(filename, stringsAsFactors = FALSE)
 
-UndesirableWords <- c("positive", "negative",
-                           "and", "it", "in", "hotel",
-                           "staff", "location", "breakfast",
-                           "bathroom", "room", "bed")
+    # only use rows that have completely been filled in
+    df <- df[complete.cases(df),]
 
-unwantedWords <- as.vector(c(stopwords("en"), UndesirableWords))
+    #get the dates as dates insteadof strings
+    df$Review_Date <- as.Date(df$Review_Date, format = "%m/%d/%Y")
+    #display the amount of reviews per week
+    getReviewsPerWeek(df)
 
-UnwantedPattern <- paste0("\\b(", paste0(unwantedWords, collapse = "|"), ")\\b")
+    # split and clean the data
+    pr <- as.data.frame(t(rbind(review_body = df$Positive_Review, Consensus = as.integer(1))))
+    nr <- as.data.frame(t(rbind(review_body = df$Negative_Review, Consensus = as.integer(-1))))
+    df <- rbind(pr, nr)
 
-# Read in the hotel reviews
-df <- read.csv("Hotel_Reviews.csv", stringsAsFactors = FALSE)
-
-# only use rows that have completely been filled in
-#limit the amount of rows we use for test purposes
-df <- df[complete.cases(df),][1:(nrow(df)),]
-
-#get the dates as dates insteadof strings
-df$Review_Date <- as.Date(df$Review_Date, format = "%m/%d/%Y")
-
-#display the amount of reviews per week
-getReviewsPerWeek(df)
-
-# split and clean the data
-pr <- as.data.frame(t(rbind(review_body = df$Positive_Review, Consensus = as.integer(1))))
-nr <- as.data.frame(t(rbind(review_body = df$Negative_Review, Consensus = as.integer(-1))))
-df <- rbind(pr, nr)
-
-df$review_body <- as.vector(CleanBody(df$review_body))
-
-write.csv(df, file = "Cleaned.csv")
+    df$review_body <- as.vector(CleanBody(df$review_body))
+    write.csv(df, file = "Cleaned.csv")
+}
 #}

@@ -1,4 +1,3 @@
-
 DoNaiveBayes <- function(df) {
 
     matrixReviews = RTextTools::create_matrix(df[, "review_body"],
@@ -15,44 +14,8 @@ DoNaiveBayes <- function(df) {
     print(table(df[ncol(df) / 2:ncol(df), "Consensus"], predicted))
     print(RTextTools::recall_accuracy(df[ncol(df) / 2:ncol(df), "Consensus"], predicted))
 
-    maReviews <- NULL
-    matrixReviews <- NULL
 }
 
-DoNaiveBayes2 <- function(mat, reviews) {
-    # train the model
-    classifier = naiveBayes(mat[trainStart:trainEnd,], as.factor(reviews[trainStart:trainEnd, 2]))
-
-    # test the validity
-    predicted = predict(classifier, mat[testStart:testEnd,]);
-    predicted
-    table(reviews[testStart:testEnd, 2], predicted)
-    recall_accuracy(reviews[testStart:testEnd, 2], predicted)
-}
-
-DoNaiveBayes3 <- function(x) {
-    corpus <- Corpus(VectorSource(df$review_body))
-    dtm <- DocumentTermMatrix(corpus)
-
-    trainCorpus <- corpus[1:250]
-    trainDtm <- dtm[1:250,]
-    trainDf <- df[1:250,]
-
-    testCorpus <- corpus[251:500]
-    testDtm <- dtm[251:500,]
-    testdf <- df[251:500,]
-
-    fiveFreq <- findFreqTerms(trainDtm)
-
-    testDtm <- DocumentTermMatrix(trainCorpus, control = list(dictionary = fiveFreq))
-    trainDtm <- DocumentTermMatrix(testCorpus, control = list(dictionary = fiveFreq))
-
-    classifier <- naiveBayes(Consensus ~ ., trainDf, laplace = 1)
-    pred <- predict(classifier, newdata = testNB)
-    pred
-
-    table(predictions = pred, actual = df$Consensus)
-}
 
 
 DoMultipleClassifiers <- function(mat, reviews, doCrossValidation) {
@@ -98,63 +61,41 @@ DoCrossValidation <- function(container, N) {
 }
 
 
-RTTDemo <- function() {
+SaveMatrix <- function(df) {
+    print("Creating the Document term frequency matrix:  this might take a while")
 
-    # SET THE SEED AND LOAD THE DATA
-    set.seed(95616)
-    data(USCongress)
-
-    # CREATE THE DOCUMENT-TERM MATRIX AND WRAP THE DATA IN A CONTAINER
-    doc_matrix <- create_matrix(USCongress$text, language = "english", removeNumbers = TRUE, stemWords = FALSE, removeSparseTerms = .998)
-    container <- create_container(doc_matrix, USCongress$major, trainSize = 1:4000, testSize = 4001:4449, virgin = FALSE)
-
-    # TRAIN THE ALGORITHMS USING THE CONTAINER
-    # ALTERNATIVELY, train_models(container, c("SVM","GLMNET","MAXENT","SLDA","BOOSTING","BAGGING","RF","NNET","TREE"))
-    SVM <- train_model(container, "SVM")
-    GLMNET <- train_model(container, "GLMNET")
-    MAXENT <- train_model(container, "MAXENT")
-    SLDA <- train_model(container, "SLDA")
-    BOOSTING <- train_model(container, "BOOSTING")
-    BAGGING <- train_model(container, "BAGGING")
-    RF <- train_model(container, "RF")
-    NNET <- train_model(container, "NNET")
-    TREE <- train_model(container, "TREE")
-
-    # CLASSIFY THE TESTING DATA USING THE TRAINED MODELS.
-    # ALTERNATIVELY, classify_models(container, list_of_trained_models)
-    SVM_CLASSIFY <- classify_model(container, SVM)
-    GLMNET_CLASSIFY <- classify_model(container, GLMNET)
-    MAXENT_CLASSIFY <- classify_model(container, MAXENT)
-    SLDA_CLASSIFY <- classify_model(container, SLDA)
-    BOOSTING_CLASSIFY <- classify_model(container, BOOSTING)
-    BAGGING_CLASSIFY <- classify_model(container, BAGGING)
-    RF_CLASSIFY <- classify_model(container, RF)
-    NNET_CLASSIFY <- classify_model(container, NNET)
-    TREE_CLASSIFY <- classify_model(container, TREE)
-
-    # CREATE THE ANALYTICS USING THE RESULTS FROM ALL THE ALGORITHMS
-    analytics <- create_analytics(container, cbind(SVM_CLASSIFY, SLDA_CLASSIFY,
-    BOOSTING_CLASSIFY, BAGGING_CLASSIFY, RF_CLASSIFY, GLMNET_CLASSIFY,
-    NNET_CLASSIFY, TREE_CLASSIFY, MAXENT_CLASSIFY))
-}
-
-TrainClassifiers <- function(df) {
-    df <- df[1:nrow(df)/10,]
     doc_matrix <- create_matrix(df$review_body,
                                 language = "english",
                                 removeNumbers = TRUE,
-                                stemWords = FALSE,
-                                removeSparseTerms = .998)
+                                stemWords = TRUE,
+                                removeSparseTerms = .99)
+
     save(doc_matrix, file = "originalMatrix.Rd")
-    
-    container <- create_container(doc_matrix,
+    rm(list = c("doc_matrix"))
+}
+
+TrainSingleClassifier <- function(training_container, algorithm) {
+    print(paste0("Training classifier for algorithm: ", algorithm))
+    models <- train_model(training_container, algorithm)
+    save(models, file = paste0(algorithm, ".rd"))
+}
+
+TrainClassifiers <- function(df, doc_matrix) {
+    print("Creating Container:")
+    training_container <- create_container(doc_matrix,
                                   df$Consensus,
-                                  trainSize = 1:4000,
-                                  testSize = 4001:4449,
+                                  trainSize = 1:30000,
+                                  testSize = 30001:35000,
                                   virgin = FALSE)
 
-    models <- train_models(container, algorithms = c("MAXENT", "SVM", "BAGGING", "RF", "TREE"))
-    save(models, file = "trainedModels.Rd")
+    save(training_container, file = "trainingContainer.Rd")
+
+    algos <- as.vector(c("BOOSTING", "GLMNET", "MAXENT", "NNET", "RF", "SLDA", "SVM"))
+
+    for(i in 1:length(algos)) {
+        TrainSingleClassifier(training_container, algos[i])
+    }
 
     rm(list = c("df", "doc_matrix", "container", "models"))
 }
+

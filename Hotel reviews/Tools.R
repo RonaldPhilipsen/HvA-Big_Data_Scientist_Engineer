@@ -32,13 +32,13 @@ DoIfNotExists <- function(filename, FUN, params) {
 }
 
 SaveDataFrameToDB <- function(database, table, df, doAppend) {
-    con <- dbConnect(RSQLite::SQLite(), dbname = database)
+    con <- dbConnect(RMySQL::MySQL(), user = 'username', password = "password", dbname = database)
     dbWriteTable(con, table, df, overwrite = !doAppend, append = doAppend)
     dbDisconnect(con)
 }
 
 ExecuteSQL <- function(database, sqlQuery) {
-    con <- dbConnect(RSQLite::SQLite(), dbname = database)
+    con <- dbConnect(RMySQL::MySQL(), user = 'username', password = "password", dbname = database)
 
     query <- dbSendQuery(con, sqlQuery)
     result <- dbFetch(query)

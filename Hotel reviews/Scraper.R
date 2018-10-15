@@ -34,7 +34,7 @@ ScrapeHotels <- function() {
                         html_text() %>%
                         CleanBody()
         # Add rows to scraped.reviews and push this to the outer scope
-        SaveDataFrameToDB("HotelReviews.sqlite",
+        SaveDataFrameToDB(database,
                       "Scraped",
                       tibble(review.id,
                              review.date,
@@ -62,7 +62,7 @@ ScrapeTripExpert <- function() {
                         html_text() %>%
                         CleanBody()
     # Add rows to scraped.reviews and push this to the outer scope
-    SaveDataFrameToDB("HotelReviews.sqlite",
+    SaveDataFrameToDB(database,
                       "Scraped",
                       tibble(review.id,
                              review.date,

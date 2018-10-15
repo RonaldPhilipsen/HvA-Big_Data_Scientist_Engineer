@@ -12,7 +12,7 @@ CleanBody <- function(words) {
     # convert the text to a vector for processing
     as.vector(words) %>%
     # convert the text into ASCII, removing all unicode characters
-    iconv(to = "ASCII") %>%
+    iconv(to = "ASCII", sub = "") %>%
     # Make all text lowercase
     tolower() %>%
     # remove decimals longer than 3, they confuse the matrix
@@ -58,6 +58,6 @@ CleanCSV <- function(filename) {
     df <- rbind(pr, nr)
 
     df$review_body <- as.vector(CleanBody(df$review_body))
-    SaveDataFrameToDB("HotelReviews.sqlite", "Original", df, doAppend = FALSE)
+    SaveDataFrameToDB(database, "Original", df, doAppend = FALSE)
 }
 #}

@@ -1,7 +1,7 @@
 required_packages <- c("magrittr", "tm", "mlr", "e1071", "dplyr", "kernlab", "lubridate", "dtplyr",
                        "readr", "ggplot2", "tidytext", "stringr", "tidyr", "scales", "broom",
                        "SnowballC", "wordcloud", "reshape2", "RTextTools", "rvest",
-                       "tibble", "devtools", "DBI", "httr", "RSQLite")
+                       "tibble", "devtools", "DBI", "httr", "RSQLite", "RMySQL")
 
 x <- lapply(required_packages, library, character.only = TRUE)
 install_github("ronald245/RTextTools", subdir = "RTextTools")
@@ -9,7 +9,7 @@ install_github("ronald245/RTextTools", subdir = "RTextTools")
 extra_scripts <- c("Tools.R", "Sentiment.R", "Classifiers.R", "CleanData.R", "Scraper.R")
 x <- lapply(extra_scripts, source)
 
-database <- "HotelReviews.sqlite"
+database <- "HotelReviews"
 
 if (!file.exists(database)) {
     CleanCSV("Hotel_Reviews.csv")
@@ -51,13 +51,15 @@ if (!scraped.exists) {
 numScrapedReviews <- ExecuteSQL(database, "select count(*) from Scraped")
 con <- dbConnect(RSQLite::SQLite(), dbname = database)
 newData <- as_tibble(dbReadTable(con, "Scraped"))
+
 dbDisconnect(con)
 
 newData <- newData[complete.cases(newData),]
 
 
 
-test <- tibble(review_body = paste(newData$review.summary, newData$review.text, " "), Consensus = NA)
+test <- tibble(review_body = paste(newData$review.summary, newData$review.text, " "), Consensus = 
+   newData$ )
 test$review_body = CleanBody(test$review_body)
 
 new_matrix <- create_matrix(test[, "review_body"],

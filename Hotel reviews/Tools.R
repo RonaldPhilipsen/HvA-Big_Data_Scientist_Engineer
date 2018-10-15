@@ -36,3 +36,14 @@ SaveDataFrameToDB <- function(database, table, df, doAppend) {
     dbWriteTable(con, table, df, overwrite = !doAppend, append = doAppend)
     dbDisconnect(con)
 }
+
+ExecuteSQL <- function(database, sqlQuery) {
+    con <- dbConnect(RSQLite::SQLite(), dbname = database)
+
+    query <- dbSendQuery(con, sqlQuery)
+    result <- dbFetch(query)
+    dbClearResult(query)
+    dbDisconnect(con)
+
+    return(result)
+}

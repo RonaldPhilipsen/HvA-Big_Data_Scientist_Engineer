@@ -1,7 +1,7 @@
 required_packages <- c("magrittr", "tm", "mlr", "e1071", "dplyr", "kernlab", "lubridate", "dtplyr",
                        "readr", "ggplot2", "tidytext", "stringr", "tidyr", "scales", "broom",
-                       "SnowballC", "wordcloud", "reshape2", "RTextTools", "hunspell", "rvest",
-                       "tibble", "devtools", "DBI", "httr")
+                       "SnowballC", "wordcloud", "reshape2", "RTextTools", "rvest",
+                       "tibble", "devtools", "DBI", "httr", "RSQLite")
 
 x <- lapply(required_packages, library, character.only = TRUE)
 install_github("ronald245/RTextTools", subdir = "RTextTools")
@@ -9,10 +9,12 @@ install_github("ronald245/RTextTools", subdir = "RTextTools")
 extra_scripts <- c("Tools.R", "Sentiment.R", "Classifiers.R", "CleanData.R", "Scraper.R")
 x <- lapply(extra_scripts, source)
 
-if (!file.exists("HotelReviews.sqlite")) {
-    DoIfNotExists("HotelReviews.csv", CleanCSV, "Hotel_Reviews.csv")
+database <- "HotelReviews.sqlite"
 
-    con <- dbConnect(RSQLite::SQLite(), dbname = "HotelReviews.sqlite")
+if (!file.exists(database)) {
+    CleanCSV("Hotel_Reviews.csv")
+    
+    con <- dbConnect(RSQLite::SQLite(), dbname = database)
     df <- as_tibble(dbReadTable(con, "Original"))
     dbDisconnect(con)
 
@@ -36,7 +38,7 @@ if (!file.exists("trainedModels.Rd")) {
 #load the models we defined earlier
 load("trainedModels.Rd")
 
-con <- dbConnect(RSQLite::SQLite(), dbname = "HotelReviews.sqlite")
+con <- dbConnect(RSQLite::SQLite(), dbname = database)
 scraped.exists <- dbExistsTable(con, "Scraped")
 dbDisconnect(con)
 
@@ -45,9 +47,15 @@ if (!scraped.exists) {
     ScrapeTripExpert()
 }
 
-con <- dbConnect(RSQLite::SQLite(), dbname = "HotelReviews.sqlite")
-newData = as_tibble(dbReadTable(con, "Scraped"))
+
+numScrapedReviews <- ExecuteSQL(database, "select count(*) from Scraped")
+con <- dbConnect(RSQLite::SQLite(), dbname = database)
+newData <- as_tibble(dbReadTable(con, "Scraped"))
 dbDisconnect(con)
+
+newData <- newData[complete.cases(newData),]
+
+
 
 test <- tibble(review_body = paste(newData$review.summary, newData$review.text, " "), Consensus = NA)
 test$review_body = CleanBody(test$review_body)

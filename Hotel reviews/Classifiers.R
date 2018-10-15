@@ -77,7 +77,6 @@ SaveMatrix <- function(df) {
 
 TrainClassifiers <- function(df, doc_matrix) {
     print("Creating Container:")
-
     training_container <- create_container(doc_matrix,
                                   df$Consensus,
                                   trainSize = 1:30000,
@@ -87,34 +86,31 @@ TrainClassifiers <- function(df, doc_matrix) {
     save(training_container, file = "trainingContainer.Rd")
 
     algos <- as.vector(c("BOOSTING", "GLMNET", "MAXENT", "NNET", "RF", "SLDA", "SVM"))
-
-
-
-
-    boosting <- train_model(container, algos[1])
+         
+    boosting <- train_model(training_container, algos[1])
     save(boosting, file = paste0("Model_", algos[1], ".Rd"))
 
-    glmnetVignette <- train_model(container, algos[2])
+    glmnetVignette <- train_model(training_container, algos[2])
     save(glmnetVignette, file = paste0("Model_", algos[2], ".Rd"))
 
-    maximumEntropy <- train_model(container, algos[3])
+    maximumEntropy <- train_model(training_container, algos[3])
     save(maximumEntropy, file = paste0("Model_", algos[3], ".Rd"))
 
-    neuralNet <- train_model(container, algos[4])
+    neuralNet <- train_model(training_container, algos[4])
     save(neuralNet, file = paste0("Model_", algos[4], ".Rd"))
 
-    randomForest <- train_model(container, algos[5])
+    randomForest <- train_model(training_container, algos[5])
     save(randomForest, file = paste0("Model_", algos[5], ".Rd"))
 
-    supervisedLDA <- train_model(container, algos[6])
+    supervisedLDA <- train_model(training_container, algos[6])
     save(supervisedLDA, file = paste0("Model_", algos[6], ".Rd"))
 
-    supportVectorMachine <- train_model(container, algos[7])
+    supportVectorMachine <- train_model(training_container, algos[7])
     save(supportVectorMachine, file = paste0("Model_", algos[7], ".Rd"))
     
     #models <- train_models(training_container, algorithms <- algos)
 
-    rm(list = c("df", "doc_matrix", "container",
+    rm(list = c("df", "doc_matrix", "training_container",
     "boosting", "glmnetVignette", "maximumEntropy", 
     "neuralNet", "randomForest", "supervisedLDA",
     "supportVectorMachine"))

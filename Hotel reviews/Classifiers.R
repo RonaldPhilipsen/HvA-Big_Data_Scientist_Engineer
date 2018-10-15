@@ -74,14 +74,10 @@ SaveMatrix <- function(df) {
     rm(list = c("doc_matrix"))
 }
 
-TrainSingleClassifier <- function(training_container, algorithm) {
-    print(paste0("Training classifier for algorithm: ", algorithm))
-    models <- train_model(training_container, algorithm)
-    save(models, file = paste0(algorithm, ".rd"))
-}
 
 TrainClassifiers <- function(df, doc_matrix) {
     print("Creating Container:")
+
     training_container <- create_container(doc_matrix,
                                   df$Consensus,
                                   trainSize = 1:30000,
@@ -92,10 +88,39 @@ TrainClassifiers <- function(df, doc_matrix) {
 
     algos <- as.vector(c("BOOSTING", "GLMNET", "MAXENT", "NNET", "RF", "SLDA", "SVM"))
 
-    for(i in 1:length(algos)) {
-        TrainSingleClassifier(training_container, algos[i])
-    }
 
-    rm(list = c("df", "doc_matrix", "container", "models"))
+
+
+    boosting <- train_model(container, algos[1])
+    save(boosting, file = paste0("Model_", algos[1], ".Rd"))
+
+    glmnetVignette <- train_model(container, algos[2])
+    save(glmnetVignette, file = paste0("Model_", algos[2], ".Rd"))
+
+    maximumEntropy <- train_model(container, algos[3])
+    save(maximumEntropy, file = paste0("Model_", algos[3], ".Rd"))
+
+    neuralNet <- train_model(container, algos[4])
+    save(neuralNet, file = paste0("Model_", algos[4], ".Rd"))
+
+    randomForest <- train_model(container, algos[5])
+    save(randomForest, file = paste0("Model_", algos[5], ".Rd"))
+
+    supervisedLDA <- train_model(container, algos[6])
+    save(supervisedLDA, file = paste0("Model_", algos[6], ".Rd"))
+
+    supportVectorMachine <- train_model(container, algos[7])
+    save(supportVectorMachine, file = paste0("Model_", algos[7], ".Rd"))
+    
+    #models <- train_models(training_container, algorithms <- algos)
+
+    rm(list = c("df", "doc_matrix", "container",
+    "boosting", "glmnetVignette", "maximumEntropy", 
+    "neuralNet", "randomForest", "supervisedLDA",
+    "supportVectorMachine"))
 }
 
+TrainSingleClassifier <- function(training_container, algorithm) {
+    models <- train_model(training_container, algorithm)
+    save(models, file = paste0(algorithm,".rd"))
+}

@@ -22,6 +22,7 @@ if (!file.exists("HotelReviews.sqlite")) {
     df <- df[sample(nrow(df)),]
     df <- df[sample(nrow(df)),]
     df <- df[1:nrow(df) / 10,]
+    df <- df[complete.cases(df),]
 
     SaveMatrix(df)
 }

@@ -31,17 +31,12 @@ ScrapeHotels <- function() {
 
         review.text <- reviews %>%
                         html_node(".review-content .expandable-content") %>%
-                        html_text() %>%
-                        CleanBody()
+                        html_text() %>% CleanBody()
         # Add rows to scraped.reviews and push this to the outer scope
-        SaveDataFrameToDB(database,
-                      "Scraped",
-                      tibble(review.id,
-                             review.date,
-                             review.score,
-                             review.summary,
-                             review.text),
-                      doAppend = TRUE)
+        SaveDataFrameToDB(database, "Scraped",
+                      tibble(review.id, review.date,
+                             review.score, review.summary,
+                             review.text), doAppend = TRUE)
     }
 }
 

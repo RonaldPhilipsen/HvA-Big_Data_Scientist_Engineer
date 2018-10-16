@@ -14,7 +14,7 @@ database <- "HotelReviews"
 if (!file.exists(database)) {
     CleanCSV("Hotel_Reviews.csv")
     
-    con <- dbConnect(RSQLite::SQLite(), dbname = database)
+    con <- dbConnect(RMySQL::MySQL(), user = 'username', password = "password", dbname = database)
     df <- as_tibble(dbReadTable(con, "Original"))
     dbDisconnect(con)
 
@@ -23,13 +23,14 @@ if (!file.exists(database)) {
     # randomise 
     df <- df[sample(nrow(df)),]
     df <- df[sample(nrow(df)),]
-    df <- df[1:nrow(df) / 10,]
+    df <- df[1: as.integer(nrow(df) / 1000),]
     df <- df[complete.cases(df),]
-
+    
     SaveMatrix(df)
 }
 
 load("originalMatrix.Rd")
+
 
 if (!file.exists("trainedModels.Rd")) {
     TrainClassifiers(df, doc_matrix)
@@ -48,18 +49,16 @@ if (!scraped.exists) {
 }
 
 
-numScrapedReviews <- ExecuteSQL(database, "select count(*) from Scraped")
-con <- dbConnect(RSQLite::SQLite(), dbname = database)
-newData <- as_tibble(dbReadTable(con, "Scraped"))
+numScrapedReviews <- ExecuteSQL(database, "select count(*) from scraped")
+con <- dbConnect(RMySQL::MySQL(), user = 'username', password = "password", dbname = database)
+newData <- as_tibble(dbReadTable(con, "scraped"))
 
 dbDisconnect(con)
 
 newData <- newData[complete.cases(newData),]
 
 
-
-test <- tibble(review_body = paste(newData$review.summary, newData$review.text, " "), Consensus = 
-   newData$ )
+test <- tibble(review_body = paste(newData$review.summary, newData$review.text, " "), Consensus =   newData$ )
 test$review_body = CleanBody(test$review_body)
 
 new_matrix <- create_matrix(test[, "review_body"],

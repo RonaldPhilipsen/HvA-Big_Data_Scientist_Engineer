@@ -33,7 +33,7 @@ TrainClassifiers <- function(df, doc_matrix, savemodelsInSingleFile) {
     
     # model summary
     analytics = create_analytics(training_container, results)
-    save(analytics, )
+    save(analytics, file = "Analytics.Rd")
     summary(analytics)
     head(analytics@document_summary)
     analytics@ensemble_summary

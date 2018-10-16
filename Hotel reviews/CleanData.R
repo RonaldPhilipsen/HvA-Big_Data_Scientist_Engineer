@@ -40,13 +40,10 @@ CleanBody <- function(words) {
 
 # Define undesirable patterns, such as UnwantedPattern
 CleanCSV <- function(filename) {
-       
     # Read in the hotel reviews
     df <- read.csv(filename, stringsAsFactors = FALSE)
-
     # only use rows that have completely been filled in
     df <- df[complete.cases(df),]
-
     #get the dates as dates insteadof strings
     df$Review_Date <- as.Date(df$Review_Date, format = "%m/%d/%Y")
     #display the amount of reviews per week

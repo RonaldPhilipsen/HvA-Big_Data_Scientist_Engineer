@@ -55,6 +55,6 @@ CleanCSV <- function(filename) {
     df <- rbind(pr, nr)
 
     df$review_body <- as.vector(CleanBody(df$review_body))
-    SaveDataFrameToDB(database, "Original", df, doAppend = FALSE)
+    SaveDataFrameToDB(database, "original", df, doAppend = TRUE)
 }
 #}

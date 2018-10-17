@@ -32,13 +32,14 @@ DoIfNotExists <- function(filename, FUN, params) {
 }
 
 SaveDataFrameToDB <- function(database, table, df, doAppend) {
-    con <- dbConnect(RMySQL::MySQL(), user = 'username', password = "password", dbname = database)
+    con <- GetMySQLConnection()
+    
     dbWriteTable(con, table, df, overwrite = !doAppend, append = doAppend)
     dbDisconnect(con)
 }
 
 ExecuteSQL <- function(database, sqlQuery) {
-    con <- dbConnect(RMySQL::MySQL(), user = 'username', password = "password", dbname = database)
+    con <- GetMySQLConnection()
 
     query <- dbSendQuery(con, sqlQuery)
     result <- dbFetch(query)
@@ -46,4 +47,18 @@ ExecuteSQL <- function(database, sqlQuery) {
     dbDisconnect(con)
 
     return(result)
+}
+
+CloseAllSQL <- function() {
+    lapply(dbListConnections(dbDriver(drv = "MySQL")), dbDisconnect)
+}
+
+GetMySQLConnection <- function() {
+    con <- dbConnect(RMySQL::MySQL(),
+                     user = database.user,
+                     password = database.password,
+                     host = database.ip,
+                     dbname = database)
+
+    return(con)
 }

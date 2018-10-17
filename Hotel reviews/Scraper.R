@@ -1,14 +1,27 @@
-ScrapeHotels <- function() {
+ScrapeHotels <- function(maxReviews) {
     url.base = "https://uk.hotels.com/ho107128-tr-p"
+
+    if (maxReviews < 50) {
+        print("Please input a multiple of 50 reviews.")
+        return()
+    }
+
+
 
     #we want a sufficient amount of reviews
     numPages <- read_html(paste0(url.base, 0)) %>%
                                         html_nodes(".review-pagination span") %>%
                                         html_text()
-
+  
     lastPage <- as.integer(str_extract_all(numPages, "\\(?[0-9,.]+\\)?")[[1]][2])
 
-    print(paste0("Reading: ", lastPage, " Pages"))
+    if (maxReviews >= (lastPage * 50)) {
+        print("You've selected a larger number of reviews than exist")
+        return()
+    }
+
+
+    print(paste0("Reading: ", as.integer(maxReviews / 50), " out of: ", lastPage, " Pages"))
 
     for (i in c(1:lastPage)) {
         url <- paste(url.base, i, sep = "")
@@ -27,16 +40,20 @@ ScrapeHotels <- function() {
 
         # Fill in and clean the rest of the data
         review.score <- reviews %>% html_attr("data-review-rating")
-        review.summary <- reviews %>% html_node(".review-summary") %>% html_text()
+        review.summary <- reviews %>% html_node(".review-summary") %>%
+                        html_text() %>% CleanBody()
 
         review.text <- reviews %>%
                         html_node(".review-content .expandable-content") %>%
                         html_text() %>% CleanBody()
         # Add rows to scraped.reviews and push this to the outer scope
-        SaveDataFrameToDB(database, "Scraped",
-                      tibble(review.id, review.date,
-                             review.score, review.summary,
-                             review.text), doAppend = TRUE)
+        scraped <- tibble(review.id, review.date, review.score,
+               review.summary, review.text)
+        SaveDataFrameToDB(database, "scraped", scraped, doAppend = TRUE)
+
+        if ((i * 50) >= maxReviews) {
+            return(paste("Done, read", i * 50, "Reviews", sep = " "))
+        }
     }
 }
 
@@ -57,6 +74,7 @@ ScrapeTripExpert <- function() {
                         html_text() %>%
                         CleanBody()
     # Add rows to scraped.reviews and push this to the outer scope
+
     SaveDataFrameToDB(database,
                       "Scraped",
                       tibble(review.id,

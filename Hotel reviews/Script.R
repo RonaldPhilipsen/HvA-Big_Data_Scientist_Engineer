@@ -1,64 +1,73 @@
+#install_github("ronald245/RTextTools", subdir = "RTextTools")
 required_packages <- c("magrittr", "tm", "mlr", "e1071", "dplyr", "kernlab", "lubridate", "dtplyr",
                        "readr", "ggplot2", "tidytext", "stringr", "tidyr", "scales", "broom",
                        "SnowballC", "wordcloud", "reshape2", "RTextTools", "rvest",
-                       "tibble", "devtools", "DBI", "httr", "RSQLite", "RMySQL")
-
-x <- lapply(required_packages, library, character.only = TRUE)
-install_github("ronald245/RTextTools", subdir = "RTextTools")
-
+                       "tibble", "devtools", "DBI", "httr", "RMySQL")
 extra_scripts <- c("Tools.R", "Sentiment.R", "Classifiers.R", "CleanData.R", "Scraper.R")
+
+x <- lapply(required_packages, require, character.only = TRUE)
 x <- lapply(extra_scripts, source)
 
 database <- "HotelReviews"
+database.ip <- "10.0.0.168"
+database.user <- "username"
+database.password <- "password"
 
-if (!file.exists(database)) {
+con <- GetMySQLConnection()
+original.exists <- dbExistsTable(con, "original")
+dbDisconnect(con)
+
+
+if (!original.exists || !file.exists("originalMatrix.Rd")) {
     CleanCSV("Hotel_Reviews.csv")
-    
-    con <- dbConnect(RMySQL::MySQL(), user = 'username', password = "password", dbname = database)
-    df <- as_tibble(dbReadTable(con, "Original"))
+
+    con <- GetMySQLConnection()
+    df <- as_tibble(dbReadTable(con, "original"))
     dbDisconnect(con)
 
     getContribution(df, get_sentiments("afinn"))
 
     # randomise 
-    df <- df[sample(nrow(df)),]
-    df <- df[sample(nrow(df)),]
-    df <- df[1: as.integer(nrow(df) / 1000),]
     df <- df[complete.cases(df),]
-    
+    df <- df[sample(nrow(df)),]
+    df <- df[sample(nrow(df)),]
+    df <- df[1:as.integer(nrow(df)/10),]
     SaveMatrix(df)
 }
 
 load("originalMatrix.Rd")
-
+load("originalDataFrame.Rd")
 
 if (!file.exists("trainedModels.Rd")) {
-    TrainClassifiers(df, doc_matrix)
+    container <- CreateContainer(df, doc_matrix)
+    TrainClassifiers(container)
 }
 
 #load the models we defined earlier
-load("trainedModels.Rd")
+load("Models.Rd")
+load("Analytics.Rd")
 
-con <- dbConnect(RSQLite::SQLite(), dbname = database)
-scraped.exists <- dbExistsTable(con, "Scraped")
+#get model analytics
+summary(analytics)
+
+
+con <- GetMySQLConnection()
+scraped.exists <- dbExistsTable(con, "scraped")
 dbDisconnect(con)
 
 if (!scraped.exists) {
-    ScrapeHotels()
+    ScrapeHotels(500)
     ScrapeTripExpert()
 }
 
-
-numScrapedReviews <- ExecuteSQL(database, "select count(*) from scraped")
-con <- dbConnect(RMySQL::MySQL(), user = 'username', password = "password", dbname = database)
-newData <- as_tibble(dbReadTable(con, "scraped"))
-
-dbDisconnect(con)
+numScrapedReviews <- ExecuteSQL(database, "call getNumScrapedReviews();")
+newData <- as_tibble(ExecuteSQL(database, paste0("call getScrapedReviews(", numScrapedReviews ,");")))
 
 newData <- newData[complete.cases(newData),]
 
 
-test <- tibble(review_body = paste(newData$review.summary, newData$review.text, " "), Consensus =   newData$ )
+test <- tibble(review_body = paste(newData$review.summary, newData$review.text, " "),
+               Consensus = ifelse((as.numeric(newData$review.score)) > 7, +1, -1) )
 test$review_body = CleanBody(test$review_body)
 
 new_matrix <- create_matrix(test[, "review_body"],
@@ -76,18 +85,26 @@ container <- create_container(new_matrix,
 
 results <- classify_models(container, models)
 
-test$MAXENTROPY_LABEL = results$MAXENTROPY_LABEL
-test$SVM_LABEL = results$SVM_LABEL
+test$LOGITBOOST_LABEL = results$LOGITBOOST_LABEL
+test$GLMNET_LABEL = results$GLMNET_LABEL
 test$FORESTS_LABEL = results$FORESTS_LABEL
+test$SVM_LABEL = results$SVM_LABEL
+test$calculatedConsensus <- 0
 
 for (i in c(1:nrow(test))) {
     consensus = 0
-    consensus <- if (results$MAXENTROPY_LABEL[i] == +1) consensus + 1 else consensus - 1
+    consensus <- if (results$LOGITBOOST_LABEL[i] == +1) consensus + 1 else consensus - 1
+    consensus <- if (results$GLMNET_LABEL[i] == +1) consensus + 1 else consensus - 1
+    consensus <- if (results$FORESTS_LABEL[i] == +1) consensus + 1 else consensus - 1
     consensus <- if (results$SVM_LABEL[i] == +1) consensus + 1 else consensus - 1
-    consensus <- if (results$FORESTS_LABEL[i] == +1)  consensus + 1 else consensus - 1
-   
-    test$Consensus[i] = consensus
+
+    test$calculatedConsensus[i] = consensus
 }
 
 
 analytics <- create_analytics(container, results)
+summary(analytics)
+recall_accuracy(test$Consensus, results$LOGITBOOST_LABEL)
+recall_accuracy(test$Consensus, results$GLMNET_LABEL)
+recall_accuracy(test$Consensus, results$FORESTS_LABEL)
+recall_accuracy(test$Consensus, results$SVM_LABEL)

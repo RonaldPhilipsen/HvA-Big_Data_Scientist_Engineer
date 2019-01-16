@@ -1,22 +1,23 @@
-UndesirableWords <- c("positive", "negative",
+CleanData <- function() {
+    UndesirableWords <- c("positive", "negative",
                            "and", "it", "in", "hotel",
                            "staff", "location", "breakfast",
                            "bathroom", "room", "bed", "na", "nana")
 
-unwantedWords <- as.vector(c(stopwords("en"), UndesirableWords))
-UnwantedPattern <- paste0("\\b(", paste0(unwantedWords, collapse = "|"), ")\\b")
 
-CleanData <- function() {
+
+    unwantedWords <- as.vector(c(stopwords("en"), UndesirableWords))
+
     hotel.reviews.cleaned <- hotel.reviews.raw
 
-    hotel.reviews.cleaned$Positive_Review <- as.vector(CleanBody(hotel.reviews.raw$Positive_Review))
-    hotel.reviews.cleaned$Negative_Review <- as.vector(CleanBody(hotel.reviews.raw$Negative_Review))
+    hotel.reviews.cleaned$Positive_Review <- as.vector(CleanString(hotel.reviews.raw$Positive_Review, unwantedWords))
+    hotel.reviews.cleaned$Negative_Review <- as.vector(CleanString(hotel.reviews.raw$Negative_Review, unwantedWords))
 
-    write.csv(hotel.reviews.cleaned$Positive_Review, file = "Review_pos.csv")
-    write.csv(hotel.reviews.cleaned$Negative_Review, file = "Review_neg.csv")
+    return(hotel.reviews.cleaned)
 }
 
-CleanString <- function(words) {
+CleanString <- function(words, undesirable.words) {
+    UnwantedPattern <- paste0("\\b(", paste0(undesirable.words, collapse = "|"), ")\\b")
     # convert the text to a vector for processing
     as.vector(words) %>%
     # convert the text into ASCII, removing all unicode characters

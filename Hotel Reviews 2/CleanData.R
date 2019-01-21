@@ -8,10 +8,12 @@ CleanData <- function() {
 
     unwantedWords <- as.vector(c(stopwords("en"), UndesirableWords))
 
-    hotel.reviews.cleaned <- hotel.reviews.raw
+    hotel.reviews.
 
-    hotel.reviews.cleaned$Positive_Review <- as.vector(CleanString(hotel.reviews.raw$Positive_Review, unwantedWords))
-    hotel.reviews.cleaned$Negative_Review <- as.vector(CleanString(hotel.reviews.raw$Negative_Review, unwantedWords))
+    <- hotel.reviews.raw
+
+    hotel.reviews$Positive_Review <- as.vector(CleanString(hotel.reviews.raw$Positive_Review, unwantedWords))
+    hotel.reviews$Negative_Review <- as.vector(CleanString(hotel.reviews.raw$Negative_Review, unwantedWords))
 
     return(hotel.reviews.cleaned)
 }

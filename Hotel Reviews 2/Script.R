@@ -1,46 +1,51 @@
-source("Tools.r")
-list.of.packages <- c("devtools", "ffbase", "shiny", "tibble", "mongolite", "tm", "magrittr", "sparklyr","dplyr", "MLlib")
+source("Settings.R")
+source("Tools.R")
+source("Mongo.R")
+list.of.packages <- c("devtools", "tibble", "magrittr", "dplyr", "sparklyr", "shiny", "leaflet")
 Require.packages(list.of.packages)
 
-hotel.reviews.collection <- mongo(collection = "hotel_reviews", db = "hotel_reviews", url = "mongodb://localhost")
-hotel.reviews.cleaned <- hotel.reviews.collection$find();
-
-hotel.reviews.dataset.csv = "hotel_Reviews_Enriched.csv"
-hotel.reviews.negative.csv = "Review_neg.csv"
-hotel.reviews.positive.csv = "Review_pos.csv"
-hotel.reviews.mixed.csv = "Review_mix.csv"
 
 
-if (!exists(hotel.reviews.cleaned)) {
-    hotel.reviews.raw <- read.csv(file = hotel.reviews.dataset.csv, header = TRUE, quote = "\"", dec = ".")
-    source("CleanData.R")
-    hotel.reviews.cleaned <- CleanData()
+if (!file.exists(fn.mixed.reviews)) {
+    hotel.reviews <- hotel.reviews.collection$find();
+
+    if (!exists(hotel.reviews)) {
+        hotel.reviews.raw <- read.csv(file = hotel.reviews.dataset.csv, header = TRUE, quote = "\"", dec = ".")
+        hotel.reviews.collection$insert(hotel.reviews.raw)
+
+    }
+
+    if (!file.exists(fn.positive.reviews)) {
+        hotel.reviews.positive <- getPositiveReviews();
+        write.csv2(hotel.reviews.positive, file = fn.positive.reviews, row.names = FALSE)
+    }
+
+    if (!file.exists(fn.negative.reviews)) {
+        hotel.reviews.negative <- getNegativeReviews();
+        write.csv2(hotel.reviews.negative, file = fn.negative.reviews, row.names = FALSE)
+    }
 }
 
+if (file.exists(fn.mixed.reviews)) {
+    reviews.mixed <- read.csv2(fn.mixed.reviews)
+} else {
+    hotel.reviews.positive <- read.csv2(file = fn.positive.reviews, sep = ";") %>% as_tibble()
+    hotel.reviews.negative <- read.csv2(file = fn.negative.reviews, sep = ";") %>% as_tibble()
 
-if (!file.exists(hotel.reviews.negative.csv) || !file.exists(hotel.reviews.positive.csv)) {
-    source("Mongo.R")
+    reviews.mixed <- bind_rows(hotel.reviews.positive, hotel.reviews.negative)
+    reviews.mixed <- reviews.mixed[sample(nrow(reviews.mixed)),]
+    reviews.mixed <- reviews.mixed[sample(nrow(reviews.mixed)),]
+
+    write.csv2(reviews.mixed, file = fn.mixed.reviews, row.names = FALSE)
 }
 
-hotel.reviews.positive <- read.csv2(file = hotel.reviews.positive.csv, sep = ",")[,2:3] %>% as_tibble()
-hotel.reviews.negative <- read.csv2(file = hotel.reviews.negative.csv, sep = ",")[, 2:3] %>% as_tibble()
+path = paste0("R -e \"shiny::runApp(\'", getwd(),"/shiny\', launch.browser = TRUE)\"")
+system(path, wait = FALSE)
 
-reviews.mixed <- bind_rows(hotel.reviews.positive, hotel.reviews.negative)
-reviews.mixed <- reviews.mixed[sample(nrow(reviews.mixed)),] 
-reviews.mixed <- reviews.mixed[sample(nrow(reviews.mixed)),]
-
-write.csv2(reviews.mixed, file = hotel.reviews.mixed.csv)
-
-## Detect data types 
-#m <- detect_dm_csv(reviews, header = T)
-#paste(m$columns$type, collapse = ",")
-#con <- laf_open(m)
-#ffdf <- laf_to_ffdf(con)
-
-
-#read.csv.ffdf(file = reviews, header = TRUE, quote = "\"", dec = ".")
-
-
-
-
+runApp(appDir = (getwd() + "/shiny/"),
+        port = 80,
+        launch.browser = TRUE,
+        host = "127.0.0.1",
+        display.mode = "auto",
+        test.mode = FALSE)
 

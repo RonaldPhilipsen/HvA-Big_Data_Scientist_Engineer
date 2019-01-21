@@ -43,6 +43,7 @@ function(input, output, session) {
 
         df$Review_Date <- ymd(df$Review_Date)
 
+        # [df %<>%] = [df = df %>%] 
         df %<>% filter(Hotel_lat == clickedMarker$lat &
                        Hotel_lng == clickedMarker$lng &
                        Review_Date >= ymd(input$dateRange[1]) &

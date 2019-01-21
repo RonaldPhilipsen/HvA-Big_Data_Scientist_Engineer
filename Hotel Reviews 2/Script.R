@@ -30,67 +30,108 @@ if (!file.exists(fn.mixed.reviews)) {
 }
 
 if (file.exists(fn.mixed.reviews)) {
-    reviews.mixed <- read.csv2(fn.mixed.reviews)
+    reviews.mixed <- read.csv2.ffdf(file = fn.mixed.reviews)
+    #reviews.mixed <- read.csv2(fn.mixed.reviews)
 } else {
-    hotel.reviews.positive <- read.csv2(file = fn.positive.reviews, sep = ";") %>% as_tibble()
-    hotel.reviews.negative <- read.csv2(file = fn.negative.reviews, sep = ";") %>% as_tibble()
+    hotel.reviews.positive <- read.csv2.ffdf(file = fn.positive.reviews, sep = ";")
+    hotel.reviews.negative <- read.csv2.ffdf(file = fn.negative.reviews, sep = ";")
+    #hotel.reviews.positive <- read.csv2(file = fn.positive.reviews, sep = ";")
+    #hotel.reviews.negative <- read.csv2(file = fn.negative.reviews, sep = ";")
 
-    reviews.mixed <- bind_rows(hotel.reviews.positive, hotel.reviews.negative)
-    reviews.mixed <- reviews.mixed[sample(nrow(reviews.mixed)),]
-    reviews.mixed <- reviews.mixed[sample(nrow(reviews.mixed)),]
+    reviews.mixed <- ffdfappend(hotel.reviews.positive, hotel.reviews.negative, adjustvmode = F)
+    #reviews.mixed <- bind_rows(hotel.reviews.positive, hotel.reviews.negative)
 
-    write.csv2(reviews.mixed, file = fn.mixed.reviews, row.names = FALSE)
+    write.csv2.ffdf(reviews.mixed, file = fn.mixed.reviews)
 }
 
+
 print(paste0("Total number of reviews: ", nrow(reviews.mixed)))
-print(paste0("number of positive reviews: ", nrow(reviews.mixed[which(reviews.mixed$Review_Is_Positive == 1),])))
-print(paste0("number of negative reviews: ", nrow(reviews.mixed[which(reviews.mixed$Review_Is_Positive == 0),])))
+#print(paste0("number of positive reviews: ", nrow(reviews.mixed[which(reviews.mixed$Review_Is_Positive == 1),])))
+print(paste0("number of positive reviews: ", nrow(reviews.mixed[ffwhich(reviews.mixed, reviews.mixed$Review_Is_Positive == 1),])))
+
+#print(paste0("number of negative reviews: ", nrow(reviews.mixed[which(reviews.mixed$Review_Is_Positive == 0),])))
+print(paste0("number of negative reviews: ", nrow(reviews.mixed[ffwhich(reviews.mixed, reviews.mixed$Review_Is_Positive == 0),])))
 
 
 #randomize the order 
-data <- reviews.mixed[sample(nrow(reviews.mixed)),]
-train_size = floor(nrow(data) * 0.75)
+data <- as.ffdf(reviews.mixed[sample(nrow(reviews.mixed)),])
+train_size =  floor(nrow(data) * 0.75)
+
+tokenizer <- text_tokenizer(num_words = vocab_size)
+
+#grab the posts and set them as x-param
 train_posts = data[1:train_size, 2]
-train_tags = data[1:train_size, 1]
-test_posts = data[(train_size + 1):nrow(data), 2]
-test_tags = data[(train_size + 1):nrow(data), 1]
 
-tokenizer <- text_tokenizer(num_words = vocab_size) %>%
-    fit_text_tokenizer(train_posts)
+tokenizer %<>% fit_text_tokenizer(train_posts)
 
+#make an ffdf
 x_train = texts_to_matrix(tokenizer, train_posts, mode = 'freq')
+train_posts <- NULL
+
+
+#grab the tags and set them as y-param
+train_tags = data[1:train_size, 1]
 y_train = to_categorical(train_tags)
+train_tags <- NULL 
 
-x_test = texts_to_matrix(tokenizer, test_posts, mode = 'freq')
-y_test = to_categorical(test_tags)
 
-x_verify = texts_to_matrix(tokenizer, c("i am very happy with this hotel", "this hotel is very bad, no room service, i would not come here again"), mode = 'freq')
-
+#define the keras model 
 model <- keras_model_sequential()
 
+#softmax is used for multiclass logistic regression, sigmoid is used for two-class logistic regression
 model %>%
+    # we use binary classification, therefore a rectified linear unit is used
+    # returns max(x,0)
     layer_dense(units = batch_size, input_shape = c(vocab_size), activation = 'relu') %>%
-    layer_dense(units = batch_size, input_shape = c(vocab_size), activation = 'relu') %>%
-    layer_dense(units = 2, activation = 'softmax')
+    #layer_dense(units = batch_size, input_shape = c(vocab_size), activation = 'relu') %>%
+    layer_dense(units = (batch_size/2), activation = "relu") %>%
+    #layer_dense(units = 2, activation = 'softmax')
+    layer_dense(units = 2, activation = 'sigmoid')
 
-model %>% compile(loss = 'categorical_crossentropy',
+# actually make the model
+# use categorical_Crossentropy for multi-class logistic regression
+# use binary_crossentropy for two-class logistic regression
+model %>% compile(loss = 'binary_crossentropy',
                   optimizer = 'adam',
                   metrics = c('accuracy'))
 
+#train the model on our training dataset
 history <- model %>% fit(x_train, y_train,
                     batch_size = batch_size,
                     epochs = 2,
                     verbose = 1,
                     validation_split = 0.1)
 
+#get some basic info about the model
 summary(model)
 
+#get rid of the training parameters
+x_train <- NULL
+y_train <- NULL
+
+#initialize the testing posts and set the x-param
+test_posts = data[(train_size + 1):nrow(data), 2]
+x_test = texts_to_matrix(tokenizer, test_posts, mode = 'freq')
+test_posts <- NULL
+
+#initialize the testing labels and set the y-param
+test_tags = data[(train_size + 1):nrow(data), 1]
+y_test = to_categorical(test_tags)
+test_tags <- NULL
+
+#evaluate the model's performance
 score <- evaluate(model, x_test, y_test, batch_size = batch_size, verbose = 1)
 
-print(paste0('Test score:', score[1]))
+print(paste0('Test loss:', score[1]))
 print(paste0('Test accuracy:', score[2]))
 
+#get rid of the testing parameters
+x_test <- NULL
+y_test <- NULL
 
-for (i in 1:10) {
-   prediction <- predict(model, x_verify)
-}
+
+#predict new things
+verify_post <- c("this hotel was very nice", "the waiter was bad and my bathroom was leaky")
+x_verify = texts_to_matrix(tokenizer, verify_post, mode = 'freq')
+
+prediction <- predict(model, x_verify)

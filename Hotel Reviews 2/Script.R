@@ -2,9 +2,8 @@ source("Settings.R")
 source("Tools.R")
 source("Mongo.R")
 list.of.packages <- c("tibble", "magrittr", "dplyr",
-                      "sparklyr", "shiny", "leaflet", 
-                      "keras", "tm", "lime",
-                      "rsample", "recipes", "yardstick")
+                      "sparklyr", "shiny", "leaflet",
+                      "keras", "tm", "ffbase")
 
 Require.packages(list.of.packages)
 
@@ -20,12 +19,12 @@ if (!file.exists(fn.mixed.reviews)) {
     }
 
     if (!file.exists(fn.positive.reviews)) {
-        hotel.reviews.positive <- getPositiveReviews();
+        hotel.reviews.positive <- getPositiveReviews(numReviewsToDl);
         write.csv2(hotel.reviews.positive, file = fn.positive.reviews, row.names = FALSE)
     }
 
     if (!file.exists(fn.negative.reviews)) {
-        hotel.reviews.negative <- getNegativeReviews();
+        hotel.reviews.negative <- getNegativeReviews(numReviewsToDl);
         write.csv2(hotel.reviews.negative, file = fn.negative.reviews, row.names = FALSE)
     }
 }
@@ -47,29 +46,51 @@ print(paste0("Total number of reviews: ", nrow(reviews.mixed)))
 print(paste0("number of positive reviews: ", nrow(reviews.mixed[which(reviews.mixed$Review_Is_Positive == 1),])))
 print(paste0("number of negative reviews: ", nrow(reviews.mixed[which(reviews.mixed$Review_Is_Positive == 0),])))
 
-corpus <- VCorpus(VectorSource(reviews.mixed$Review))
-tdm <- DocumentTermMatrix(corpus, list(removePunctuation = T, stopwords = T, removeNumbers = T, stemDocument = T, stripWhitespace = T)) %>%
-    removeSparseTerms(0.998)
+
+#randomize the order 
+data <- reviews.mixed[sample(nrow(reviews.mixed)),]
+train_size = floor(nrow(data) * 0.75)
+train_posts = data[1:train_size, 2]
+train_tags = data[1:train_size, 1]
+test_posts = data[(train_size + 1):nrow(data), 2]
+test_tags = data[(train_size + 1):nrow(data), 1]
+
+tokenizer <- text_tokenizer(num_words = vocab_size) %>%
+    fit_text_tokenizer(train_posts)
+
+x_train = texts_to_matrix(tokenizer, train_posts, mode = 'freq')
+y_train = to_categorical(train_tags)
+
+x_test = texts_to_matrix(tokenizer, test_posts, mode = 'freq')
+y_test = to_categorical(test_tags)
+
+x_verify = texts_to_matrix(tokenizer, c("i am very happy with this hotel", "this hotel is very bad, no room service, i would not come here again"), mode = 'freq')
 
 model <- keras_model_sequential()
 
 model %>%
-    layer_dense(units = 64, input_shape = 100) %>%
-    layer_activation(activation = 'relu') %>%
-    layer_dense(units = 10) %>%
-    layer_activation(activation = 'softmax')
+    layer_dense(units = batch_size, input_shape = c(vocab_size), activation = 'relu') %>%
+    layer_dense(units = batch_size, input_shape = c(vocab_size), activation = 'relu') %>%
+    layer_dense(units = 2, activation = 'softmax')
 
-model %>% compile(
-  loss = 'categorical_crossentropy',
-  optimizer = optimizer_sgd(lr = 0.02),
-  metrics = c('accuracy')
-)
+model %>% compile(loss = 'categorical_crossentropy',
+                  optimizer = 'adam',
+                  metrics = c('accuracy'))
 
-#train model on batches of data
-model %>% fit(x_train, y_train, epochs = 5, batch_size = 32)
+history <- model %>% fit(x_train, y_train,
+                    batch_size = batch_size,
+                    epochs = 2,
+                    verbose = 1,
+                    validation_split = 0.1)
 
-#evaluate performance
-loss_and_metrics %>% evaluate(x_test, y_test, batch_size = 128)
-                     
-# generate predictions on new data:
-classes %>% predict(x_test, batch_size = 128)
+summary(model)
+
+score <- evaluate(model, x_test, y_test, batch_size = batch_size, verbose = 1)
+
+print(paste0('Test score:', score[1]))
+print(paste0('Test accuracy:', score[2]))
+
+
+for (i in 1:10) {
+   prediction <- predict(model, x_verify)
+}

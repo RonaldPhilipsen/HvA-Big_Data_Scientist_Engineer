@@ -27,6 +27,7 @@ function(input, output, session) {
                 lng = mean(Hotel_lng),
                 avg_score = sprintf("%.1f", mean(Reviewer_Score)),
                 num_reviews = n(),
+                address = first(Hotel_Address)
                 ) %>%
                 mutate(group = cut(as.numeric(avg_score), breaks = c(3, 5, 6, 7, 9, 10),
                 labels = c('darkred', 'red', 'orange', 'green', "darkgreen")))
@@ -37,23 +38,36 @@ function(input, output, session) {
     observeEvent(input$recalculate, {
         df <- hotels()
 
-        print("observed recalculate_click")
+        print("observed map_marker_click")
         clickedMarker = input$map_marker_click
         print(clickedMarker)
 
         df$Review_Date <- ymd(df$Review_Date)
 
-        # [df %<>%] = [df = df %>%] 
+
         df %<>% filter(Hotel_lat == clickedMarker$lat &
                        Hotel_lng == clickedMarker$lng &
                        Review_Date >= ymd(input$dateRange[1]) &
                        Review_Date <= ymd(input$dateRange[2]))
 
+        topNationalities <- as.data.frame(table(df$Reviewer_Nationality))
+        topNationalities <- topNationalities[order(-rank(topNationalities$Freq)),][1:5,]
+        print(topNationalities)
+
         output$ReviewsOverTime <- renderPlot({
             ggplot(df, aes(x = Review_Date, y = Reviewer_Score)) +
-                 geom_point() +
-                 geom_smooth(method = "lm")
-        }, height = 400, width = 600)
+            ylim(0, 10) +
+            geom_point() +
+            geom_smooth(method = "auto")
+        })
+
+
+        output$ReviewerNationality <- renderPlot({
+            bp <- ggplot(topNationalities, aes(x = " ", y = topNationalities$Freq, fill = topNationalities$Var1)) +
+            geom_bar(width = 1, stat = "identity")
+            pie <- bp + coord_polar("y", start = 0)
+            pie
+        })
     })
 
 
@@ -66,16 +80,30 @@ function(input, output, session) {
 
         df$Review_Date <- ymd(df$Review_Date)
 
+
         df %<>% filter(Hotel_lat == clickedMarker$lat &
                        Hotel_lng == clickedMarker$lng &
                        Review_Date >= ymd(input$dateRange[1]) &
                        Review_Date <= ymd(input$dateRange[2]))
 
+        topNationalities <- as.data.frame(table(df$Reviewer_Nationality))
+        topNationalities <- topNationalities[order(-rank(topNationalities$Freq)),][1:5,]
+        print(topNationalities)
+
         output$ReviewsOverTime <- renderPlot({
             ggplot(df, aes(x = Review_Date, y = Reviewer_Score)) +
+            ylim(0, 10) +
             geom_point() +
-            geom_smooth(method = "lm")
-        }, height = 400, width = 600)
+            geom_smooth(method = "auto")
+        })
+
+
+        output$ReviewerNationality <- renderPlot({
+            bp <- ggplot(topNationalities, aes(x = " ", y = topNationalities$Freq, fill = topNationalities$Var1)) +
+            geom_bar(width = 1, stat = "identity")
+            pie <- bp + coord_polar("y", start = 0)
+            pie
+        })
     })
 
     output$map <- renderLeaflet({
@@ -98,6 +126,7 @@ function(input, output, session) {
                           popup = {
             paste(sep = "<br/>",
                   paste("<strong>", df$Hotel_Name, "</strong>"),
+                  paste("<italic>", df$address, "</italic>"),
                   paste("<strong>", "Avg rating: ", "</strong>", df$avg_score),
                   paste("<strong>", "Number of reviews: ", "</strong>", df$num_reviews)
                   )

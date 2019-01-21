@@ -10,7 +10,10 @@ fluidPage(
     sidebarLayout(
         mainPanel(
             leafletOutput("map"),
-            plotOutput("ReviewsOverTime")
+             splitLayout(
+                plotOutput("ReviewsOverTime"),
+                plotOutput("ReviewerNationality")
+            )
         ),
         sidebarPanel(
               sliderInput("minimum_score",

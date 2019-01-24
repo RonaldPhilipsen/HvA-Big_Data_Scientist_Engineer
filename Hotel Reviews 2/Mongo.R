@@ -14,8 +14,9 @@ getPositiveReviews <- function(numReviews) {
                                     limit = numReviews,
                                 )
 
-    hotel.reviews.positive$Review <- hotel.reviews.positive$Positive_Review
+    hotel.reviews.positive$Review <- as.factor(hotel.reviews.positive$Positive_Review)
     hotel.reviews.positive$Positive_Review <- NULL
+    hotel.reviews.positive %<>% as.ffdf()
 
     return(hotel.reviews.positive)
 }
@@ -28,10 +29,13 @@ getNegativeReviews <- function(numReviews) {
                                                 "Review_Is_Positive":"$Review_Is_Positive"
                                               }',
                                     limit = numReviews
-                                ) %>% as_tibble()
+                                )
 
-    hotel.reviews.negative$Review <- hotel.reviews.negative$Negative_Review
+    
+    hotel.reviews.negative$Review <- as.factor(hotel.reviews.negative$Negative_Review)
     hotel.reviews.negative$Negative_Review <- NULL
+    hotel.reviews.negative %<>% as.ffdf()
+
     return(hotel.reviews.negative)
 }
 

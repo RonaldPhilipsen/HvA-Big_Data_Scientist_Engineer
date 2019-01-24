@@ -5,7 +5,7 @@ Require.packages <- function(list.of.packages) {
     }
 
     suppressPackageStartupMessages(
-    x <- lapply(list.of.packages, require, character.only = TRUE)
+        x <- lapply(list.of.packages, require, character.only = TRUE)
     )
 }
 

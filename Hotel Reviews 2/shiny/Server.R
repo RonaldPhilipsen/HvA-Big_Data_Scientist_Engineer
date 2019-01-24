@@ -11,7 +11,7 @@ function(input, output, session) {
     hotels <- reactive({
         x <- hotel.reviews.collection$find(query = paste(
                                             '{',
-                                            paste('"Hotel_Country" : ', '"NL",'),
+                                            #paste('"Hotel_Country" : ', '"NL",'),
                                             paste('"Average_Score" : ', '{ "$gt" : ', input$minimum_score, '}',
                                             "}"
                                             )

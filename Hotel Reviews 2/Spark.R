@@ -15,8 +15,6 @@ dataframe.spark <- spark_read_csv(sc,
                                   overwrite = TRUE,
                                   delimiter = ";")
 
-dataframe.spark
-
 dataframe.spark <- ft_tokenizer(dataframe.spark, input_col = "Review", output_col = "tokens")
 
 
@@ -30,15 +28,6 @@ hotel.reviews.spark <- spark_read_csv(sc,
 
 hotel.reviews.spark <- filter(hotel.reviews.spark, nchar(Review) > 0) %>%
     mutate(Review = regexp_replace(Review, "[_\"\'():;,.!?\\-]", "")) %>%
-    ft_tokenizer(input_col = "Review", output_col = "tokens", uid = random_string("tokenizer_"), "") %>%
-    mutate(Word = explode(tokens))
+    ft_tokenizer(input_col = "Review", output_col = "tokens", uid = random_string("tokenizer_"), "")
 
-
-
-
-#ft_tokenizer(input_col = "Review", output_col = "word_list")
 spark_disconnect(sc)
-
-conf <- spark_config()
-conf$spark.sql.catalogImplementation <- "in-memory"
-sc <- spark_connect(master = "local", config = conf)

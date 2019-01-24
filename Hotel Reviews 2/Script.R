@@ -21,12 +21,12 @@ if (!file.exists(fn.mixed.reviews)) {
 
     if (!file.exists(fn.positive.reviews)) {
         hotel.reviews.positive <- getPositiveReviews(numReviewsToDl);
-        write.csv2(hotel.reviews.positive, file = fn.positive.reviews, row.names = FALSE)
+        write.csv2.ffdf(hotel.reviews.positive, file = fn.positive.reviews)
     }
 
     if (!file.exists(fn.negative.reviews)) {
         hotel.reviews.negative <- getNegativeReviews(numReviewsToDl);
-        write.csv2(hotel.reviews.negative, file = fn.negative.reviews, row.names = FALSE)
+        write.csv2.ffdf(hotel.reviews.negative, file = fn.negative.reviews)
     }
 }
 
@@ -36,12 +36,8 @@ if (file.exists(fn.mixed.reviews)) {
 } else {
     hotel.reviews.positive <- read.csv2.ffdf(file = fn.positive.reviews, sep = ";")
     hotel.reviews.negative <- read.csv2.ffdf(file = fn.negative.reviews, sep = ";")
-    #hotel.reviews.positive <- read.csv2(file = fn.positive.reviews, sep = ";")
-    #hotel.reviews.negative <- read.csv2(file = fn.negative.reviews, sep = ";")
 
     reviews.mixed <- ffdfappend(hotel.reviews.positive, hotel.reviews.negative, adjustvmode = F)
-    #reviews.mixed <- bind_rows(hotel.reviews.positive, hotel.reviews.negative)
-
     write.csv2.ffdf(reviews.mixed, file = fn.mixed.reviews)
 }
 
@@ -66,21 +62,19 @@ train_posts = data[1:train_size, 2]
 tokenizer %<>% fit_text_tokenizer(train_posts)
 
 # make a matrix
-# we use term-frequency independe
 x_train = texts_to_matrix(tokenizer, train_posts, mode = 'tfidf')
 train_posts <- NULL
-
 
 #grab the tags and set them as y-param
 train_tags = data[1:train_size, 1]
 y_train = to_categorical(train_tags)
 train_tags <- NULL 
 
-
 #define the keras model 
 model <- keras_model_sequential()
 
-#softmax is used for multiclass logistic regression, sigmoid is used for two-class logistic regression
+# softmax is used for multiclass logistic regression, 
+# sigmoid is used for two-class logistic regression
 model %>%
     # we use binary classification, therefore a rectified linear unit is used
     # returns max(x,0)
@@ -88,8 +82,8 @@ model %>%
     #Dropout consists in randomly setting a fraction rate of input units to 0 at each update during training time, which helps prevent overfitting.
     layer_dropout(rate = 0.4) %>%
     layer_dense(units = (batch_size / 2), activation = "relu") %>%
-    layer_dense(units = (batch_size/ 3), activation = 'relu') %>%
     layer_dropout(rate = 0.3) %>%
+    layer_dense(units = (batch_size / 3), activation = 'relu') %>%
     layer_dense(units = 2, activation = 'sigmoid')
 
 # actually make the model
@@ -102,12 +96,13 @@ model %>% compile(loss = 'binary_crossentropy',
 #train the model on our training dataset
 history <- model %>% fit(x_train, y_train,
                     batch_size = batch_size,
-                    epochs = 2,
+                    epochs = 10,
                     verbose = 1,
                     validation_split = 0.1)
 
 #get some basic info about the model
 summary(model)
+plot(history)
 
 #get rid of the training parameters
 x_train <- NULL
@@ -136,6 +131,6 @@ y_test <- NULL
 
 #predict new things
 verify_post <- c("this hotel was very nice", "the waiter was bad and my bathroom was leaky")
-x_verify = texts_to_matrix(tokenizer, verify_post, mode = 'freq')
+x_verify = texts_to_matrix(tokenizer, verify_post, mode = 'tfidf')
 
 prediction <- model %>% predict_classes(x_verify)

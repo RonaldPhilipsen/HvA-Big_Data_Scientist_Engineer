@@ -64,8 +64,9 @@ train_posts = data[1:train_size, 2]
 
 tokenizer %<>% fit_text_tokenizer(train_posts)
 
-#make an ffdf
-x_train = texts_to_matrix(tokenizer, train_posts, mode = 'freq')
+# make a matrix
+# we use term-frequency independe
+x_train = texts_to_matrix(tokenizer, train_posts, mode = 'tfidf')
 train_posts <- NULL
 
 
@@ -83,9 +84,11 @@ model %>%
     # we use binary classification, therefore a rectified linear unit is used
     # returns max(x,0)
     layer_dense(units = batch_size, input_shape = c(vocab_size), activation = 'relu') %>%
-    #layer_dense(units = batch_size, input_shape = c(vocab_size), activation = 'relu') %>%
-    layer_dense(units = (batch_size/2), activation = "relu") %>%
-    #layer_dense(units = 2, activation = 'softmax')
+    #Dropout consists in randomly setting a fraction rate of input units to 0 at each update during training time, which helps prevent overfitting.
+    layer_dropout(rate = 0.4) %>%
+    layer_dense(units = (batch_size / 2), activation = "relu") %>%
+    layer_dense(units = (batch_size/ 3), activation = 'relu') %>%
+    layer_dropout(rate = 0.3) %>%
     layer_dense(units = 2, activation = 'sigmoid')
 
 # actually make the model
@@ -134,4 +137,4 @@ y_test <- NULL
 verify_post <- c("this hotel was very nice", "the waiter was bad and my bathroom was leaky")
 x_verify = texts_to_matrix(tokenizer, verify_post, mode = 'freq')
 
-prediction <- predict(model, x_verify)
+prediction <- model %>% predict_classes(x_verify)

@@ -1,7 +1,7 @@
 require(leaflet)
 require(mongolite)
-library(ggplot2)
-library(lubridate)
+require(ggplot2)
+require(lubridate)
 
 hotel.reviews.collection <- mongo(collection = "hotel_reviews", db = "hotel_reviews", url = "mongodb://localhost")
 

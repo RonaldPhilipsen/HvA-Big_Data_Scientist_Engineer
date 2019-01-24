@@ -16,6 +16,7 @@ if (!file.exists(fn.mixed.reviews)) {
     if (!exists(hotel.reviews)) {
         hotel.reviews.raw <- read.csv(file = fn.hotel.reviews, header = TRUE, quote = "\"", dec = ".")
         hotel.reviews.collection$insert(hotel.reviews.raw)
+        hotel.reviews.raw <- NULL
     }
 
     if (!file.exists(fn.positive.reviews)) {

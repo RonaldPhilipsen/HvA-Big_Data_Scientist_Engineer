@@ -5,7 +5,7 @@ fn.positive.reviews <- "Review_pos.csv"
 fn.mixed.reviews <- "Review_mix.csv"
 
 # settings for mongo
-numReviewsToDl = 10000
+numReviewsToDl = 50000
 
 # Keras settings
 vocab_size <- 5000 #number of words

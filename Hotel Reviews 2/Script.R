@@ -14,7 +14,11 @@ if (!file.exists(fn.mixed.reviews)) {
     hotel.reviews <- hotel.reviews.collection$find();
 
     if (!exists(hotel.reviews)) {
-        hotel.reviews.raw <- read.csv(file = fn.hotel.reviews, header = TRUE, quote = "\"", dec = ".")
+        hotel.reviews.raw <- read.csv2(file = fn.hotel.reviews,
+                                           header = TRUE,
+                                           quote = "\"",
+                                           dec = ".",
+                                           )
         hotel.reviews.collection$insert(hotel.reviews.raw)
         hotel.reviews.raw <- NULL
     }
@@ -39,20 +43,18 @@ if (file.exists(fn.mixed.reviews)) {
 
     reviews.mixed <- ffdfappend(hotel.reviews.positive, hotel.reviews.negative, adjustvmode = F)
     write.csv2.ffdf(reviews.mixed, file = fn.mixed.reviews)
+
+    rm(hotel.reviews.negative)
+    rm(hotel.reviews.positive)
 }
-
-
+        
 print(paste0("Total number of reviews: ", nrow(reviews.mixed)))
-#print(paste0("number of positive reviews: ", nrow(reviews.mixed[which(reviews.mixed$Review_Is_Positive == 1),])))
 print(paste0("number of positive reviews: ", nrow(reviews.mixed[ffwhich(reviews.mixed, reviews.mixed$Review_Is_Positive == 1),])))
-
-#print(paste0("number of negative reviews: ", nrow(reviews.mixed[which(reviews.mixed$Review_Is_Positive == 0),])))
 print(paste0("number of negative reviews: ", nrow(reviews.mixed[ffwhich(reviews.mixed, reviews.mixed$Review_Is_Positive == 0),])))
-
-
+                                 
 #randomize the order 
 data <- as.ffdf(reviews.mixed[sample(nrow(reviews.mixed)),])
-train_size =  floor(nrow(data) * 0.75)
+train_size =  floor(nrow(data) * 0.90)
 
 tokenizer <- text_tokenizer(num_words = vocab_size)
 
@@ -63,12 +65,12 @@ tokenizer %<>% fit_text_tokenizer(train_posts)
 
 # make a matrix
 x_train = texts_to_matrix(tokenizer, train_posts, mode = 'tfidf')
-train_posts <- NULL
+rm(train_posts)
 
 #grab the tags and set them as y-param
 train_tags = data[1:train_size, 1]
 y_train = to_categorical(train_tags)
-train_tags <- NULL 
+rm(train_tags) 
 
 #define the keras model 
 model <- keras_model_sequential()
@@ -82,8 +84,8 @@ model %>%
     #Dropout consists in randomly setting a fraction rate of input units to 0 at each update during training time, which helps prevent overfitting.
     layer_dropout(rate = 0.4) %>%
     layer_dense(units = (batch_size / 2), activation = "relu") %>%
-    layer_dropout(rate = 0.3) %>%
-    layer_dense(units = (batch_size / 3), activation = 'relu') %>%
+    layer_dropout(rate = 0.4 %>%
+    layer_dense(units = (batch_size / 4), activation = 'relu') %>%
     layer_dense(units = 2, activation = 'sigmoid')
 
 # actually make the model
@@ -105,18 +107,18 @@ summary(model)
 plot(history)
 
 #get rid of the training parameters
-x_train <- NULL
-y_train <- NULL
+rm(x_train)
+rm(y_train)
 
 #initialize the testing posts and set the x-param
 test_posts = data[(train_size + 1):nrow(data), 2]
 x_test = texts_to_matrix(tokenizer, test_posts, mode = 'freq')
-test_posts <- NULL
+rm(test_posts)
 
 #initialize the testing labels and set the y-param
 test_tags = data[(train_size + 1):nrow(data), 1]
 y_test = to_categorical(test_tags)
-test_tags <- NULL
+rm(test_tags)
 
 #evaluate the model's performance
 score <- evaluate(model, x_test, y_test, batch_size = batch_size, verbose = 1)
@@ -125,8 +127,8 @@ print(paste0('Test loss:', score[1]))
 print(paste0('Test accuracy:', score[2]))
 
 #get rid of the testing parameters
-x_test <- NULL
-y_test <- NULL
+rm(x_test)
+rm(y_test)
 
 
 #predict new things

@@ -18,9 +18,10 @@ if (!file.exists(fn.mixed.reviews)) {
                                            header = TRUE,
                                            quote = "\"",
                                            dec = ".",
+                                           sep = ","
                                            )
         hotel.reviews.collection$insert(hotel.reviews.raw)
-        hotel.reviews.raw <- NULL
+        rm(hotel.reviews.raw)
     }
 
     if (!file.exists(fn.positive.reviews)) {
@@ -35,6 +36,7 @@ if (!file.exists(fn.mixed.reviews)) {
 }
 
 if (file.exists(fn.mixed.reviews)) {
+    print("Reviews file already exists. reusing!")
     reviews.mixed <- read.csv2.ffdf(file = fn.mixed.reviews)
     #reviews.mixed <- read.csv2(fn.mixed.reviews)
 } else {
@@ -54,7 +56,9 @@ print(paste0("number of negative reviews: ", nrow(reviews.mixed[ffwhich(reviews.
                                  
 #randomize the order 
 data <- as.ffdf(reviews.mixed[sample(nrow(reviews.mixed)),])
-train_size =  floor(nrow(data) * 0.90)
+rm(reviews.mixed)
+train_size = nrow(data)
+#train_size =  floor(nrow(data) * 0.90)
 
 tokenizer <- text_tokenizer(num_words = vocab_size)
 
@@ -77,14 +81,14 @@ model <- keras_model_sequential()
 
 # softmax is used for multiclass logistic regression, 
 # sigmoid is used for two-class logistic regression
+# we use binary classification, therefore a rectified linear unit is used
+#Dropout consists in randomly setting a fraction rate of input units to 0 at each update during training time, which helps prevent overfitting.
+# returns max(x,0)
 model %>%
-    # we use binary classification, therefore a rectified linear unit is used
-    # returns max(x,0)
     layer_dense(units = batch_size, input_shape = c(vocab_size), activation = 'relu') %>%
-    #Dropout consists in randomly setting a fraction rate of input units to 0 at each update during training time, which helps prevent overfitting.
     layer_dropout(rate = 0.4) %>%
     layer_dense(units = (batch_size / 2), activation = "relu") %>%
-    layer_dropout(rate = 0.4 %>%
+    layer_dropout(rate = 0.2) %>%
     layer_dense(units = (batch_size / 4), activation = 'relu') %>%
     layer_dense(units = 2, activation = 'sigmoid')
 
@@ -92,15 +96,16 @@ model %>%
 # use categorical_Crossentropy for multi-class logistic regression
 # use binary_crossentropy for two-class logistic regression
 model %>% compile(loss = 'binary_crossentropy',
-                  optimizer = 'adam',
+                  optimizer = 'nadam',
                   metrics = c('accuracy'))
 
 #train the model on our training dataset
-history <- model %>% fit(x_train, y_train,
-                    batch_size = batch_size,
-                    epochs = 10,
-                    verbose = 1,
-                    validation_split = 0.1)
+history <- model %>% fit(x_train,
+                         y_train,
+                         batch_size = batch_size,
+                         epochs = 2,
+                         verbose = 1,
+                         validation_split = 0.25)
 
 #get some basic info about the model
 summary(model)
@@ -110,29 +115,10 @@ plot(history)
 rm(x_train)
 rm(y_train)
 
-#initialize the testing posts and set the x-param
-test_posts = data[(train_size + 1):nrow(data), 2]
-x_test = texts_to_matrix(tokenizer, test_posts, mode = 'freq')
-rm(test_posts)
-
-#initialize the testing labels and set the y-param
-test_tags = data[(train_size + 1):nrow(data), 1]
-y_test = to_categorical(test_tags)
-rm(test_tags)
-
-#evaluate the model's performance
-score <- evaluate(model, x_test, y_test, batch_size = batch_size, verbose = 1)
-
-print(paste0('Test loss:', score[1]))
-print(paste0('Test accuracy:', score[2]))
-
-#get rid of the testing parameters
-rm(x_test)
-rm(y_test)
-
-
 #predict new things
 verify_post <- c("this hotel was very nice", "the waiter was bad and my bathroom was leaky")
 x_verify = texts_to_matrix(tokenizer, verify_post, mode = 'tfidf')
 
+
 prediction <- model %>% predict_classes(x_verify)
+prediction
